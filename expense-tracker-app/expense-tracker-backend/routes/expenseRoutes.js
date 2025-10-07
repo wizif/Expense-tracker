@@ -26,28 +26,4 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
-// Update expense
-router.put('/:id', protect, async (req, res) => {
-  try {
-    const expense = await Expense.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      req.body,
-      { new: true }
-    );
-    res.json(expense);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-// Delete expense
-router.delete('/:id', protect, async (req, res) => {
-  try {
-    await Expense.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
-    res.json({ message: 'Expense deleted' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
 module.exports = router;
