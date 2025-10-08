@@ -1,62 +1,127 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
+import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
 
 export default function LoginScreen() {
-  const { signInWithGoogle } = useAuth();
+  const { signIn, setActive: setActiveSignIn } = useSignIn();
+  const { signUp, setActive: setActiveSignUp } = useSignUp();
+  const router = useRouter();
+  
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignIn = async () => {
+    if (!email || !password) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await signIn.create({
+        identifier: email,
+        password,
+      });
+
+      await setActiveSignIn({ session: result.createdSessionId });
+      router.replace('/(tabs)');
+    } catch (err) {
+      alert(err.errors?.[0]?.message || 'Sign in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    if (!email || !password) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await signUp.create({
+        emailAddress: email,
+        password,
+      });
+
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      
+      // For simplicity, auto-verify in development
+      await setActiveSignUp({ session: result.createdSessionId });
+      router.replace('/(tabs)');
+    } catch (err) {
+      alert(err.errors?.[0]?.message || 'Sign up failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#0f0f1e', '#1a1a2e', '#252542']}
-        style={styles.gradient}
-      >
-        <View style={styles.header}>
-          <MaterialIcons name="account-balance-wallet" size={80} color="#4f7cff" />
-          <Text style={styles.title}>Expense Tracker</Text>
-          <Text style={styles.subtitle}>Track your spending, save smartly</Text>
-        </View>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <View style={styles.content}>
+        <MaterialIcons name="account-balance-wallet" size={80} color="#4f7cff" />
+        <Text style={styles.title}>Expense Tracker</Text>
+        <Text style={styles.subtitle}>{isSignUp ? 'Create your account' : 'Welcome back!'}</Text>
 
-        <View style={styles.features}>
-          <View style={styles.feature}>
-            <MaterialIcons name="offline-bolt" size={32} color="#4ade80" />
-            <Text style={styles.featureText}>Works Offline</Text>
-          </View>
-          <View style={styles.feature}>
-            <MaterialIcons name="bar-chart" size={32} color="#4f7cff" />
-            <Text style={styles.featureText}>Smart Analytics</Text>
-          </View>
-          <View style={styles.feature}>
-            <MaterialIcons name="security" size={32} color="#fbbf24" />
-            <Text style={styles.featureText}>Secure & Private</Text>
-          </View>
-        </View>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#6c757d"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
 
-        <Pressable style={styles.googleButton} onPress={signInWithGoogle}>
-          <MaterialIcons name="g-mobiledata" size={32} color="#fff" />
-          <Text style={styles.buttonText}>Continue with Google</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Password (min 8 characters)"
+          placeholderTextColor="#6c757d"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+
+        <Pressable 
+          style={[styles.button, loading && styles.buttonDisabled]} 
+          onPress={isSignUp ? handleSignUp : handleSignIn}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+          </Text>
         </Pressable>
 
-        <Text style={styles.footer}>Powered by Firebase Authentication</Text>
-      </LinearGradient>
-    </View>
+        <Pressable onPress={() => setIsSignUp(!isSignUp)} style={styles.switchButton}>
+          <Text style={styles.switchText}>
+            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+          </Text>
+        </Pressable>
+
+        <Text style={styles.footer}>Powered by Clerk</Text>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0f0f1e',
   },
-  gradient: {
+  content: {
     flex: 1,
-    justifyContent: 'space-around',
+    justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 60,
   },
   title: {
     fontSize: 36,
@@ -65,50 +130,48 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#a0a0c0',
     marginTop: 8,
+    marginBottom: 40,
   },
-  features: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  input: {
     width: '100%',
-    marginVertical: 40,
+    backgroundColor: '#1a1a2e',
+    borderRadius: 12,
+    padding: 16,
+    color: '#ffffff',
+    fontSize: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#252542',
   },
-  feature: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  featureText: {
-    color: '#a0a0c0',
-    marginTop: 8,
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  button: {
+    width: '100%',
     backgroundColor: '#4f7cff',
     paddingVertical: 16,
-    paddingHorizontal: 32,
     borderRadius: 12,
-    width: '90%',
-    justifyContent: 'center',
-    shadowColor: '#4f7cff',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    backgroundColor: '#3a5fcc',
   },
   buttonText: {
     color: '#ffffff',
     fontSize: 18,
     fontWeight: '600',
-    marginLeft: 12,
+  },
+  switchButton: {
+    marginTop: 20,
+  },
+  switchText: {
+    color: '#4f7cff',
+    fontSize: 14,
   },
   footer: {
     color: '#6c757d',
     fontSize: 12,
-    marginTop: 20,
+    marginTop: 40,
   },
 });

@@ -1,15 +1,16 @@
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
-import { useAuth } from '../context/AuthContext';
+import { useUser, useAuth } from '@clerk/clerk-expo';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user } = useUser();
+  const { signOut } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
-    await logout();
-    router.replace('/');
+    await signOut();
+    router.replace('/(auth)/login');
   };
 
   return (
@@ -18,20 +19,20 @@ export default function ProfileScreen() {
         <Text style={styles.title}>Profile</Text>
       </View>
 
-      {/* Profile Info */}
       <View style={styles.profileCard}>
-        {user?.profilePicture ? (
-          <Image source={{ uri: user.profilePicture }} style={styles.avatar} />
+        {user?.imageUrl ? (
+          <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
         ) : (
           <View style={styles.avatarPlaceholder}>
             <MaterialIcons name="person" size={48} color="#4f7cff" />
           </View>
         )}
-        <Text style={styles.name}>{user?.name || 'User'}</Text>
-        <Text style={styles.email}>{user?.email || 'email@example.com'}</Text>
+        <Text style={styles.name}>
+          {user?.firstName || user?.emailAddresses[0]?.emailAddress?.split('@')[0] || 'User'}
+        </Text>
+        <Text style={styles.email}>{user?.emailAddresses[0]?.emailAddress || 'email@example.com'}</Text>
       </View>
 
-      {/* Menu Items */}
       <View style={styles.menu}>
         <Pressable style={styles.menuItem}>
           <MaterialIcons name="settings" size={24} color="#a0a0c0" />

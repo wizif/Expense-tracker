@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { useAuth } from '../../app/context/AuthContext';
+import { useUser } from '@clerk/clerk-expo';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
 
   return (
@@ -13,7 +13,9 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Welcome back,</Text>
-          <Text style={styles.username}>{user?.name || 'User'}</Text>
+          <Text style={styles.username}>
+            {user?.firstName || user?.emailAddresses[0]?.emailAddress?.split('@')[0] || 'User'}
+          </Text>
         </View>
         <MaterialIcons name="notifications-none" size={28} color="#fff" />
       </View>
