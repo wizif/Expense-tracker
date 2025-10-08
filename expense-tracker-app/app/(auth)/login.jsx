@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -38,7 +38,7 @@ export default function LoginScreen() {
           <Text style={styles.buttonText}>Continue with Google</Text>
         </Pressable>
 
-        <Text style={styles.footer}>Your data is encrypted and secure</Text>
+        <Text style={styles.footer}>Powered by Firebase Authentication</Text>
       </LinearGradient>
     </View>
   );

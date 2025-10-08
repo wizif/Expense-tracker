@@ -1,5 +1,5 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { AuthProvider, useAuth } from '../app/context/AuthContext';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
